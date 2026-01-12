@@ -19,6 +19,11 @@ const imgImage28 = "/assets/background-gradient.png";
 export default function Frame() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLDivElement>(null);
+  const panel1Ref = useRef<HTMLDivElement>(null);
+  const panel2Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Ensure we are in a browser environment
@@ -27,8 +32,13 @@ export default function Frame() {
     const ctx = gsap.context(() => {
       const track = trackRef.current;
       const section = sectionRef.current;
+      const spacer = spacerRef.current;
+      const container = containerRef.current;
+      const heroSection = heroSectionRef.current;
+      const panel1 = panel1Ref.current;
+      const panel2 = panel2Ref.current;
 
-      if (!track || !section) return;
+      if (!track || !section || !spacer || !container) return;
 
       // Calculate how far we need to move horizontally
       // Since we have 2 panels of 100vw, the track is 200vw.
@@ -59,6 +69,70 @@ export default function Frame() {
           invalidateOnRefresh: true,
         },
       });
+
+      // 3. Theme transition - animate all sections to white when spacer comes into view
+      const themeElements = [container, spacer, section, panel1, panel2].filter(Boolean);
+
+      themeElements.forEach((element) => {
+        gsap.to(element, {
+          backgroundColor: "#ffffff",
+          scrollTrigger: {
+            trigger: spacer,
+            start: "top bottom",
+            end: "top center",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+      });
+
+      // 4. Animate text color in spacer
+      const spacerText = spacer.querySelector("p");
+      if (spacerText) {
+        gsap.to(spacerText, {
+          color: "#000000",
+          scrollTrigger: {
+            trigger: spacer,
+            start: "top bottom",
+            end: "top center",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
+      // 5. Animate all text content in panels to dark colors
+      if (panel1) {
+        const panel1Text = panel1.querySelectorAll("p, h1, h2, h3, h4, h5, h6, span, div");
+        panel1Text.forEach((text) => {
+          gsap.to(text, {
+            color: "#000000",
+            scrollTrigger: {
+              trigger: spacer,
+              start: "top bottom",
+              end: "top center",
+              scrub: 1,
+              invalidateOnRefresh: true,
+            },
+          });
+        });
+      }
+
+      if (panel2) {
+        const panel2Text = panel2.querySelectorAll("p, h1, h2, h3, h4, h5, h6, span, div");
+        panel2Text.forEach((text) => {
+          gsap.to(text, {
+            color: "#000000",
+            scrollTrigger: {
+              trigger: spacer,
+              start: "top bottom",
+              end: "top center",
+              scrub: 1,
+              invalidateOnRefresh: true,
+            },
+          });
+        });
+      }
     }, sectionRef);
 
     return () => {
@@ -68,7 +142,7 @@ export default function Frame() {
   }, []);
 
   return (
-    <div className="bg-[#202020] relative w-full min-h-screen">
+    <div ref={containerRef} className="bg-[#202020] relative w-full min-h-screen">
       
       {/* Top Section: Header & Hero with Background */}
       <div className="relative w-full">
@@ -103,19 +177,19 @@ export default function Frame() {
           className="flex h-full w-fit flex-nowrap"
         >
           {/* Panel 1: Jagex */}
-          <div className="w-screen h-full flex-shrink-0 flex flex-col justify-center box-border">
+          <div ref={panel1Ref} className="w-screen h-full flex-shrink-0 flex flex-col justify-center box-border">
             <Jagex />
           </div>
 
           {/* Panel 2: Introduction */}
-          <div className="w-screen h-full flex-shrink-0 flex items-center justify-center bg-[#202020] box-border">
+          <div ref={panel2Ref} className="w-screen h-full flex-shrink-0 flex items-center justify-center bg-[#202020] box-border">
             <Introduction />
           </div>
         </div>
       </section>
 
       {/* Optional: Spacer / Next Content */}
-      <div className="h-[50vh] w-full bg-neutral-900 flex items-center justify-center">
+      <div ref={spacerRef} className="h-[50vh] w-full bg-[#202020] flex items-center justify-center">
          <p className="text-white font-figtree opacity-50">Next Section</p>
       </div>
     </div>

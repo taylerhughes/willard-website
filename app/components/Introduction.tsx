@@ -9,7 +9,7 @@ export default function Introduction() {
         <p className="font-figtree font-semibold text-[24px] md:text-[34px] leading-[1.4] md:leading-[1.591]">
           Consider Willard the design department you didn’t think you could afford. We provide end-to-end product design and strategy for software teams that value precision and craftsmanship.
         </p>
-        <p className="font-figtree font-normal text-[20px] md:text-[28px] leading-[1.4] md:leading-[1.5] text-white/80">
+        <p className="font-figtree font-normal text-[20px] md:text-[28px] leading-[1.4] md:leading-[1.5]">
           We don’t work for you; we work with you, embedding ourselves into your workflow to solve your most difficult interface challenges and streamline your developer handoff.
         </p>
       </div>

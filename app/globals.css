@@ -5,3 +5,12 @@
   --font-bebas: var(--font-bebas);
   --font-poppins: var(--font-poppins);
 }
+
+/* Hide scrollbars in Calendly iframe */
+.calendly-inline-widget iframe {
+  overflow: hidden !important;
+}
+
+.calendly-inline-widget {
+  overflow: hidden !important;
+}
