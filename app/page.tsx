@@ -3,6 +3,8 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+// import { SplitText } from "gsap/SplitText"; // Premium plugin
+import Lenis from "lenis";
 
 import Header from "./components/Header";
 import Hero from "./components/Hero";
@@ -29,6 +31,22 @@ export default function Frame() {
     // Ensure we are in a browser environment
     if (typeof window === "undefined") return;
 
+    // Initialize Lenis smooth scroll
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.lagSmoothing(0);
+
     const ctx = gsap.context(() => {
       const track = trackRef.current;
       const section = sectionRef.current;
@@ -38,7 +56,8 @@ export default function Frame() {
       const panel1 = panel1Ref.current;
       const panel2 = panel2Ref.current;
 
-      if (!track || !section || !spacer || !container) return;
+      if (!container) return;
+      if (!track || !section || !spacer) return;
 
       // Calculate how far we need to move horizontally
       // Since we have 2 panels of 100vw, the track is 200vw.
@@ -133,9 +152,86 @@ export default function Frame() {
           });
         });
       }
-    }, sectionRef);
+
+      // Work item animations
+      const workItems = gsap.utils.toArray(".work-item");
+
+      workItems.forEach((item: any) => {
+        const img = item.querySelector(".work-item-img");
+        const nameH1 = item.querySelector(".work-item-name h1");
+
+        // Manual character split (alternative to SplitText)
+        if (nameH1) {
+          const text = nameH1.textContent || "";
+          nameH1.innerHTML = "";
+
+          const chars = text.split("").map((char) => {
+            const span = document.createElement("span");
+            span.textContent = char === " " ? "\u00A0" : char;
+            span.style.display = "inline-block";
+            span.style.overflow = "hidden";
+            span.style.position = "relative";
+
+            const inner = document.createElement("span");
+            inner.textContent = char === " " ? "\u00A0" : char;
+            inner.style.display = "inline-block";
+
+            span.appendChild(inner);
+            nameH1.appendChild(span);
+            return inner;
+          });
+
+          // Set initial state for characters
+          gsap.set(chars, { y: "125%" });
+
+          // Animate each character
+          chars.forEach((char, index) => {
+            ScrollTrigger.create({
+              trigger: item,
+              start: `top+=${index * 25 - 250} top`,
+              end: `top+=${index * 25 - 100} top`,
+              scrub: 1,
+              animation: gsap.fromTo(
+                char,
+                { y: "125%" },
+                { y: "0%", ease: "none" }
+              ),
+            });
+          });
+        }
+
+        if (img) {
+          // Clip-path reveal animation on scroll down (entrance)
+          ScrollTrigger.create({
+            trigger: item,
+            start: "top bottom",
+            end: "top top",
+            scrub: 0.5,
+            animation: gsap.fromTo(
+              img,
+              { clipPath: "polygon(25% 25%, 75% 40%, 100% 100%, 0% 100%)" },
+              { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", ease: "none" }
+            ),
+          });
+
+          // Clip-path hide animation on scroll past (exit)
+          ScrollTrigger.create({
+            trigger: item,
+            start: "bottom bottom",
+            end: "bottom top",
+            scrub: 0.5,
+            animation: gsap.fromTo(
+              img,
+              { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" },
+              { clipPath: "polygon(0% 0%, 100% 0%, 75% 60%, 25% 75%)", ease: "none" }
+            ),
+          });
+        }
+      });
+    }, containerRef);
 
     return () => {
+      lenis.destroy();
       ctx.revert();
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
@@ -192,6 +288,39 @@ export default function Frame() {
       <div ref={spacerRef} className="h-[50vh] w-full bg-[#202020] flex items-center justify-center">
          <p className="text-white font-figtree opacity-50">Next Section</p>
       </div>
+
+      {/* Work Items with Scroll Animations */}
+      <section className="work-item">
+        <div className="work-item-img">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=1080&fit=crop" alt="Carbon Edge" />
+        </div>
+        <div className="work-item-name">
+          <h1>Carbon Edge</h1>
+        </div>
+      </section>
+
+      <section className="work-item">
+        <div className="work-item-img">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=1080&fit=crop&sat=-100" alt="Velocity Grid" />
+        </div>
+        <div className="work-item-name">
+          <h1>Velocity Grid</h1>
+        </div>
+      </section>
+
+      <section className="work-item">
+        <div className="work-item-img">
+          <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&h=1080&fit=crop" alt="Aeroform" />
+        </div>
+        <div className="work-item-name">
+          <h1>Aeroform</h1>
+        </div>
+      </section>
+
+      {/* Outro Section */}
+      <section className="outro h-screen w-full flex items-center justify-center bg-white">
+        <h1 className="text-[5rem] font-[550] uppercase text-center">Back to base</h1>
+      </section>
     </div>
   );
 }

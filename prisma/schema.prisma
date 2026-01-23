@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model OnboardingClient {
+  id        String   @id @default(cuid())
+  clientId  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 1) Client Identity
+  businessName    String
+  clientFullName  String
+  roleTitle       String
+  email           String
+  linkedinUrl     String?
+  timezone        String
+  billingContact  String?
+
+  // 2) Sprint Definition
+  sprintType           String
+  oneSentenceOutcome   String
+  successCriteria      String
+  nonNegotiables       String?
+  outOfScope           String?
+
+  // 3) Why Now
+  triggerEvent                   String
+  deadlineTiming                 String
+  consequencesOfGettingItWrong   String
+
+  // 4) Product Context
+  productType   String
+  targetUser    String
+  currentState  String
+  buildCadence  String
+  stageFocus    String
+
+  // 5) Decision + Risk
+  keyDecision     String
+  knowns          String
+  unknowns        String
+  topAssumptions  String
+  currentSignals  String?
+
+  // 6) Assets + Access
+  websiteUrl       String?
+  productLink      String?
+  figmaLink        String?
+  brandGuidelines  String?
+  designSystem     String?
+  docsLinks        String?
+  analyticsTools   String?
+  accessNeeded     String?
+
+  // 7) Stakeholders + Working Style
+  whoApproves             String
+  whoWillBuild            String
+  preferredCommunication  String
+  feedbackStyle           String
+  availability            String
+
+  // 8) Commercial + Conversion Signals
+  budgetComfort           String?
+  ongoingHelpLikelihood   String?
+  decisionTimeline        String?
+  objections              String?
+  previousExperience      String?
+
+  // 9) Next Steps
+  kickoffTime          String?
+  expectedDeliveryDate String?
+  clientWillSend       String?
+  willardWillSend      String?
+
+  // Track data source
+  source String @default("zapier") // "zapier" or "form"
+}
