@@ -165,7 +165,7 @@ export default function Frame() {
           const text = nameH1.textContent || "";
           nameH1.innerHTML = "";
 
-          const chars = text.split("").map((char) => {
+          const chars = text.split("").map((char: string) => {
             const span = document.createElement("span");
             span.textContent = char === " " ? "\u00A0" : char;
             span.style.display = "inline-block";
@@ -185,7 +185,7 @@ export default function Frame() {
           gsap.set(chars, { y: "125%" });
 
           // Animate each character
-          chars.forEach((char, index) => {
+          chars.forEach((char: HTMLSpanElement, index: number) => {
             ScrollTrigger.create({
               trigger: item,
               start: `top+=${index * 25 - 250} top`,
