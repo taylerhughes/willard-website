@@ -3,73 +3,74 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
 // Validation schema for Zapier webhook payload
+// Accept empty strings and convert to undefined for proper null handling
 const zapierClientSchema = z.object({
   clientId: z.string().min(1, 'Client ID is required'),
 
-  // Client Identity - all optional since Zapier may send partial data
-  businessName: z.string().optional(),
-  clientFullName: z.string().optional(),
-  roleTitle: z.string().optional(),
-  email: z.string().email().optional(),
+  // Client Identity - all optional, empty strings allowed
+  businessName: z.string().optional().or(z.literal('')),
+  clientFullName: z.string().optional().or(z.literal('')),
+  roleTitle: z.string().optional().or(z.literal('')),
+  email: z.string().email().optional().or(z.literal('')),
   linkedinUrl: z.string().url().optional().or(z.literal('')),
-  timezone: z.string().optional(),
-  billingContact: z.string().optional(),
+  timezone: z.string().optional().or(z.literal('')),
+  billingContact: z.string().optional().or(z.literal('')),
 
-  // Sprint Definition
-  sprintType: z.string().optional(),
-  oneSentenceOutcome: z.string().optional(),
-  successCriteria: z.string().optional(),
-  nonNegotiables: z.string().optional(),
-  outOfScope: z.string().optional(),
+  // Sprint Definition - allow empty strings
+  sprintType: z.string().optional().or(z.literal('')),
+  oneSentenceOutcome: z.string().optional().or(z.literal('')),
+  successCriteria: z.string().optional().or(z.literal('')),
+  nonNegotiables: z.string().optional().or(z.literal('')),
+  outOfScope: z.string().optional().or(z.literal('')),
 
-  // Why Now
-  triggerEvent: z.string().optional(),
-  deadlineTiming: z.string().optional(),
-  consequencesOfGettingItWrong: z.string().optional(),
+  // Why Now - allow empty strings
+  triggerEvent: z.string().optional().or(z.literal('')),
+  deadlineTiming: z.string().optional().or(z.literal('')),
+  consequencesOfGettingItWrong: z.string().optional().or(z.literal('')),
 
-  // Product Context
-  productType: z.string().optional(),
-  targetUser: z.string().optional(),
-  currentState: z.string().optional(),
-  buildCadence: z.string().optional(),
-  stageFocus: z.string().optional(),
+  // Product Context - allow empty strings
+  productType: z.string().optional().or(z.literal('')),
+  targetUser: z.string().optional().or(z.literal('')),
+  currentState: z.string().optional().or(z.literal('')),
+  buildCadence: z.string().optional().or(z.literal('')),
+  stageFocus: z.string().optional().or(z.literal('')),
 
-  // Decision + Risk
-  keyDecision: z.string().optional(),
-  knowns: z.string().optional(),
-  unknowns: z.string().optional(),
-  topAssumptions: z.string().optional(),
-  currentSignals: z.string().optional(),
+  // Decision + Risk - allow empty strings
+  keyDecision: z.string().optional().or(z.literal('')),
+  knowns: z.string().optional().or(z.literal('')),
+  unknowns: z.string().optional().or(z.literal('')),
+  topAssumptions: z.string().optional().or(z.literal('')),
+  currentSignals: z.string().optional().or(z.literal('')),
 
-  // Assets + Access
+  // Assets + Access - allow empty strings
   websiteUrl: z.string().url().optional().or(z.literal('')),
   productLink: z.string().url().optional().or(z.literal('')),
   figmaLink: z.string().url().optional().or(z.literal('')),
   brandGuidelines: z.string().url().optional().or(z.literal('')),
   designSystem: z.string().url().optional().or(z.literal('')),
-  docsLinks: z.string().optional(),
-  analyticsTools: z.string().optional(),
-  accessNeeded: z.string().optional(),
+  docsLinks: z.string().optional().or(z.literal('')),
+  analyticsTools: z.string().optional().or(z.literal('')),
+  accessNeeded: z.string().optional().or(z.literal('')),
 
-  // Stakeholders + Working Style
-  whoApproves: z.string().optional(),
-  whoWillBuild: z.string().optional(),
-  preferredCommunication: z.string().optional(),
-  feedbackStyle: z.string().optional(),
-  availability: z.string().optional(),
+  // Stakeholders + Working Style - allow empty strings
+  whoApproves: z.string().optional().or(z.literal('')),
+  whoWillBuild: z.string().optional().or(z.literal('')),
+  preferredCommunication: z.string().optional().or(z.literal('')),
+  feedbackStyle: z.string().optional().or(z.literal('')),
+  availability: z.string().optional().or(z.literal('')),
 
-  // Commercial + Conversion Signals
-  budgetComfort: z.string().optional(),
-  ongoingHelpLikelihood: z.string().optional(),
-  decisionTimeline: z.string().optional(),
-  objections: z.string().optional(),
-  previousExperience: z.string().optional(),
+  // Commercial + Conversion Signals - allow empty strings
+  budgetComfort: z.string().optional().or(z.literal('')),
+  ongoingHelpLikelihood: z.string().optional().or(z.literal('')),
+  decisionTimeline: z.string().optional().or(z.literal('')),
+  objections: z.string().optional().or(z.literal('')),
+  previousExperience: z.string().optional().or(z.literal('')),
 
-  // Next Steps
-  kickoffTime: z.string().optional(),
-  expectedDeliveryDate: z.string().optional(),
-  clientWillSend: z.string().optional(),
-  willardWillSend: z.string().optional(),
+  // Next Steps - allow empty strings
+  kickoffTime: z.string().optional().or(z.literal('')),
+  expectedDeliveryDate: z.string().optional().or(z.literal('')),
+  clientWillSend: z.string().optional().or(z.literal('')),
+  willardWillSend: z.string().optional().or(z.literal('')),
 });
 
 export async function POST(request: NextRequest) {
@@ -81,6 +82,10 @@ export async function POST(request: NextRequest) {
 
     // Extract clientId and prepare data for database
     const { clientId, ...clientData } = validatedData;
+
+    // Helper function to convert empty strings to null
+    const toNullIfEmpty = (value: string | undefined) =>
+      value && value.trim() !== '' ? value : null;
 
     // Check if client already exists
     const existingClient = await prisma.onboardingClient.findUnique({
@@ -98,67 +103,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new client record with defaults for required fields
+    // Create new client record - all fields can be null if not provided or empty
     const newClient = await prisma.onboardingClient.create({
       data: {
         clientId,
         source: 'zapier',
 
-        // Required fields with defaults if not provided
-        businessName: clientData.businessName || '',
-        clientFullName: clientData.clientFullName || '',
-        roleTitle: clientData.roleTitle || '',
-        email: clientData.email || '',
-        timezone: clientData.timezone || '',
+        // All fields optional - convert empty strings to null
+        businessName: toNullIfEmpty(clientData.businessName),
+        clientFullName: toNullIfEmpty(clientData.clientFullName),
+        roleTitle: toNullIfEmpty(clientData.roleTitle),
+        email: toNullIfEmpty(clientData.email),
+        timezone: toNullIfEmpty(clientData.timezone),
 
-        sprintType: clientData.sprintType || '',
-        oneSentenceOutcome: clientData.oneSentenceOutcome || '',
-        successCriteria: clientData.successCriteria || '',
+        sprintType: toNullIfEmpty(clientData.sprintType),
+        oneSentenceOutcome: toNullIfEmpty(clientData.oneSentenceOutcome),
+        successCriteria: toNullIfEmpty(clientData.successCriteria),
 
-        triggerEvent: clientData.triggerEvent || '',
-        deadlineTiming: clientData.deadlineTiming || '',
-        consequencesOfGettingItWrong: clientData.consequencesOfGettingItWrong || '',
+        triggerEvent: toNullIfEmpty(clientData.triggerEvent),
+        deadlineTiming: toNullIfEmpty(clientData.deadlineTiming),
+        consequencesOfGettingItWrong: toNullIfEmpty(clientData.consequencesOfGettingItWrong),
 
-        productType: clientData.productType || '',
-        targetUser: clientData.targetUser || '',
-        currentState: clientData.currentState || '',
-        buildCadence: clientData.buildCadence || '',
-        stageFocus: clientData.stageFocus || '',
+        productType: toNullIfEmpty(clientData.productType),
+        targetUser: toNullIfEmpty(clientData.targetUser),
+        currentState: toNullIfEmpty(clientData.currentState),
+        buildCadence: toNullIfEmpty(clientData.buildCadence),
+        stageFocus: toNullIfEmpty(clientData.stageFocus),
 
-        keyDecision: clientData.keyDecision || '',
-        knowns: clientData.knowns || '',
-        unknowns: clientData.unknowns || '',
-        topAssumptions: clientData.topAssumptions || '',
+        keyDecision: toNullIfEmpty(clientData.keyDecision),
+        knowns: toNullIfEmpty(clientData.knowns),
+        unknowns: toNullIfEmpty(clientData.unknowns),
+        topAssumptions: toNullIfEmpty(clientData.topAssumptions),
 
-        whoApproves: clientData.whoApproves || '',
-        whoWillBuild: clientData.whoWillBuild || '',
-        preferredCommunication: clientData.preferredCommunication || '',
-        feedbackStyle: clientData.feedbackStyle || '',
-        availability: clientData.availability || '',
+        whoApproves: toNullIfEmpty(clientData.whoApproves),
+        whoWillBuild: toNullIfEmpty(clientData.whoWillBuild),
+        preferredCommunication: toNullIfEmpty(clientData.preferredCommunication),
+        feedbackStyle: toNullIfEmpty(clientData.feedbackStyle),
+        availability: toNullIfEmpty(clientData.availability),
 
-        // Optional fields
-        linkedinUrl: clientData.linkedinUrl || null,
-        billingContact: clientData.billingContact || null,
-        nonNegotiables: clientData.nonNegotiables || null,
-        outOfScope: clientData.outOfScope || null,
-        currentSignals: clientData.currentSignals || null,
-        websiteUrl: clientData.websiteUrl || null,
-        productLink: clientData.productLink || null,
-        figmaLink: clientData.figmaLink || null,
-        brandGuidelines: clientData.brandGuidelines || null,
-        designSystem: clientData.designSystem || null,
-        docsLinks: clientData.docsLinks || null,
-        analyticsTools: clientData.analyticsTools || null,
-        accessNeeded: clientData.accessNeeded || null,
-        budgetComfort: clientData.budgetComfort || null,
-        ongoingHelpLikelihood: clientData.ongoingHelpLikelihood || null,
-        decisionTimeline: clientData.decisionTimeline || null,
-        objections: clientData.objections || null,
-        previousExperience: clientData.previousExperience || null,
-        kickoffTime: clientData.kickoffTime || null,
-        expectedDeliveryDate: clientData.expectedDeliveryDate || null,
-        clientWillSend: clientData.clientWillSend || null,
-        willardWillSend: clientData.willardWillSend || null,
+        linkedinUrl: toNullIfEmpty(clientData.linkedinUrl),
+        billingContact: toNullIfEmpty(clientData.billingContact),
+        nonNegotiables: toNullIfEmpty(clientData.nonNegotiables),
+        outOfScope: toNullIfEmpty(clientData.outOfScope),
+        currentSignals: toNullIfEmpty(clientData.currentSignals),
+        websiteUrl: toNullIfEmpty(clientData.websiteUrl),
+        productLink: toNullIfEmpty(clientData.productLink),
+        figmaLink: toNullIfEmpty(clientData.figmaLink),
+        brandGuidelines: toNullIfEmpty(clientData.brandGuidelines),
+        designSystem: toNullIfEmpty(clientData.designSystem),
+        docsLinks: toNullIfEmpty(clientData.docsLinks),
+        analyticsTools: toNullIfEmpty(clientData.analyticsTools),
+        accessNeeded: toNullIfEmpty(clientData.accessNeeded),
+        budgetComfort: toNullIfEmpty(clientData.budgetComfort),
+        ongoingHelpLikelihood: toNullIfEmpty(clientData.ongoingHelpLikelihood),
+        decisionTimeline: toNullIfEmpty(clientData.decisionTimeline),
+        objections: toNullIfEmpty(clientData.objections),
+        previousExperience: toNullIfEmpty(clientData.previousExperience),
+        kickoffTime: toNullIfEmpty(clientData.kickoffTime),
+        expectedDeliveryDate: toNullIfEmpty(clientData.expectedDeliveryDate),
+        clientWillSend: toNullIfEmpty(clientData.clientWillSend),
+        willardWillSend: toNullIfEmpty(clientData.willardWillSend),
       },
     });
 

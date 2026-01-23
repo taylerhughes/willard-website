@@ -18,39 +18,39 @@ model OnboardingClient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 1) Client Identity
-  businessName    String
-  clientFullName  String
-  roleTitle       String
-  email           String
+  // 1) Client Identity - all nullable for partial Zapier data
+  businessName    String?
+  clientFullName  String?
+  roleTitle       String?
+  email           String?
   linkedinUrl     String?
-  timezone        String
+  timezone        String?
   billingContact  String?
 
   // 2) Sprint Definition
-  sprintType           String
-  oneSentenceOutcome   String
-  successCriteria      String
+  sprintType           String?
+  oneSentenceOutcome   String?
+  successCriteria      String?
   nonNegotiables       String?
   outOfScope           String?
 
   // 3) Why Now
-  triggerEvent                   String
-  deadlineTiming                 String
-  consequencesOfGettingItWrong   String
+  triggerEvent                   String?
+  deadlineTiming                 String?
+  consequencesOfGettingItWrong   String?
 
   // 4) Product Context
-  productType   String
-  targetUser    String
-  currentState  String
-  buildCadence  String
-  stageFocus    String
+  productType   String?
+  targetUser    String?
+  currentState  String?
+  buildCadence  String?
+  stageFocus    String?
 
   // 5) Decision + Risk
-  keyDecision     String
-  knowns          String
-  unknowns        String
-  topAssumptions  String
+  keyDecision     String?
+  knowns          String?
+  unknowns        String?
+  topAssumptions  String?
   currentSignals  String?
 
   // 6) Assets + Access
@@ -64,11 +64,11 @@ model OnboardingClient {
   accessNeeded     String?
 
   // 7) Stakeholders + Working Style
-  whoApproves             String
-  whoWillBuild            String
-  preferredCommunication  String
-  feedbackStyle           String
-  availability            String
+  whoApproves             String?
+  whoWillBuild            String?
+  preferredCommunication  String?
+  feedbackStyle           String?
+  availability            String?
 
   // 8) Commercial + Conversion Signals
   budgetComfort           String?
