@@ -1,0 +1,111 @@
+/* Mini Sprint Form Styling - Shopify-inspired clean design */
+
+/* Form sections - white cards with shadows */
+.onboarding-form section {
+  margin-bottom: 24px;
+}
+
+/* Section headers - outside the border */
+.onboarding-form section h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  border: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+  background: transparent;
+}
+
+/* Container for inputs - this gets the border */
+.onboarding-form section > div {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Form field rows - horizontal layout */
+.onboarding-form section > div > div {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: start;
+  gap: 24px;
+  padding: 20px 24px 20px 24px;
+  border-bottom: 1px solid #F3F4F6;
+  min-height: 60px;
+  position: relative;
+}
+
+.onboarding-form section > div > div:last-child {
+  border-bottom: none;
+}
+
+/* Labels - left side with icon space */
+.onboarding-form label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin: 0;
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Input fields - right side */
+.onboarding-form input[type="text"],
+.onboarding-form input[type="email"],
+.onboarding-form textarea,
+.onboarding-form select {
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  padding: 8px 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  background: white;
+  color: #111827;
+}
+
+.onboarding-form input:focus,
+.onboarding-form textarea:focus,
+.onboarding-form select:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.onboarding-form input::placeholder,
+.onboarding-form textarea::placeholder,
+.onboarding-form select::placeholder {
+  color: #9CA3AF;
+}
+
+/* Remove colored borders and backgrounds - validation shown via icons only */
+.onboarding-form input.border-green-500,
+.onboarding-form textarea.border-green-500,
+.onboarding-form select.border-green-500 {
+  border-color: #D1D5DB !important;
+  background-color: white !important;
+}
+
+/* Error states - keep red for errors */
+.onboarding-form input.border-red-500,
+.onboarding-form textarea.border-red-500,
+.onboarding-form select.border-red-500 {
+  border-color: #EF4444 !important;
+  background-color: white !important;
+}
+
+/* Progress bar */
+.bg-green-500 {
+  background-color: #10B981 !important;
+}
+
+/* Helper text / completion badges */
+.onboarding-form label .text-green-600 {
+  font-size: 12px;
+  font-weight: 400;
+}

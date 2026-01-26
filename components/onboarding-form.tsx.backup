@@ -1,0 +1,1098 @@
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  OnboardingFormData,
+  onboardingFormSchema,
+  sprintTypes,
+  productTypes,
+  currentStates,
+  buildCadences,
+  stageFocuses,
+  communicationPreferences,
+  feedbackPreferences,
+} from '@/types/onboarding';
+
+export default function OnboardingForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<OnboardingFormData>({
+    resolver: zodResolver(onboardingFormSchema),
+    mode: 'onChange', // Enable real-time validation
+  });
+
+  // Watch all form values to show completion status
+  const formValues = watch();
+
+  // Helper to check if a field has a value
+  const isFieldComplete = (value: any): boolean => {
+    if (value === null || value === undefined || value === '') return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    return true;
+  };
+
+  // Helper to get input class with completion indicator
+  const getInputClassName = (fieldPath: string, hasError: boolean = false) => {
+    const pathParts = fieldPath.split('.');
+    let value = formValues;
+    for (const part of pathParts) {
+      value = value?.[part as keyof typeof value];
+    }
+
+    const isComplete = isFieldComplete(value);
+
+    const baseClass = 'w-full px-3 py-2 border rounded-md transition-all duration-200';
+    const completionClass = isComplete ? 'border-green-500 bg-green-50' : 'border-gray-300';
+    const errorClass = hasError ? 'border-red-500 bg-red-50' : '';
+
+    return `${baseClass} ${errorClass || completionClass}`;
+  };
+
+  // Calculate completion percentage
+  const calculateCompletion = () => {
+    if (!formValues) return 0;
+
+    const allFields = [
+      formValues.clientIdentity?.businessName,
+      formValues.clientIdentity?.clientFullName,
+      formValues.clientIdentity?.roleTitle,
+      formValues.clientIdentity?.email,
+      formValues.clientIdentity?.timezone,
+      formValues.sprintDefinition?.sprintType,
+      formValues.sprintDefinition?.oneSentenceOutcome,
+      formValues.sprintDefinition?.successCriteria,
+      formValues.whyNow?.triggerEvent,
+      formValues.whyNow?.deadlineTiming,
+      formValues.whyNow?.consequencesOfGettingItWrong,
+      formValues.productContext?.productType,
+      formValues.productContext?.targetUser,
+      formValues.productContext?.currentState,
+      formValues.productContext?.buildCadence,
+      formValues.productContext?.stageFocus,
+      formValues.decisionRisk?.keyDecision,
+      formValues.decisionRisk?.knowns,
+      formValues.decisionRisk?.unknowns,
+      formValues.decisionRisk?.topAssumptions,
+      formValues.stakeholders?.whoApproves,
+      formValues.stakeholders?.whoWillBuild,
+      formValues.stakeholders?.preferredCommunication,
+      formValues.stakeholders?.feedbackStyle,
+      formValues.stakeholders?.availability,
+    ];
+
+    const completed = allFields.filter(isFieldComplete).length;
+    return Math.round((completed / allFields.length) * 100);
+  };
+
+  const completionPercentage = calculateCompletion();
+
+  // Fetch and pre-populate form data if clientId is present
+  useEffect(() => {
+    const urlClientId = searchParams.get('clientId');
+    if (urlClientId) {
+      setClientId(urlClientId);
+      setIsLoading(true);
+
+      fetch(`/api/client/${urlClientId}`)
+        .then((res) => res.json())
+        .then((response) => {
+          if (response.success && response.data) {
+            const data = response.data;
+
+            // Pre-populate all form fields
+            Object.keys(data).forEach((section) => {
+              const sectionData = data[section as keyof typeof data];
+              Object.keys(sectionData).forEach((field) => {
+                const value = sectionData[field as keyof typeof sectionData];
+                if (value) {
+                  setValue(
+                    `${section}.${field}` as any,
+                    value
+                  );
+                }
+              });
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching client data:', error);
+          alert('Could not load pre-filled data. Please fill out the form manually.');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [searchParams, setValue]);
+
+  const onSubmit = async (data: OnboardingFormData) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...data, clientId }),
+      });
+
+      if (response.ok) {
+        setSubmitSuccess(true);
+      } else {
+        alert('There was an error submitting the form. Please try again.');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      alert('There was an error submitting the form. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitSuccess) {
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-green-900 mb-2">
+            Thanks for submitting!
+          </h2>
+          <p className="text-green-800">
+            We've received your onboarding information and will be in touch
+            shortly to kick off your Willard Mini Sprint.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Loading your information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="max-w-3xl mx-auto p-8 space-y-12"
+    >
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold">Willard Mini Sprint Onboarding</h1>
+          <p className="text-gray-600">
+            Help us understand your needs so we can deliver the best possible
+            sprint outcome.
+          </p>
+          {clientId && (
+            <p className="text-sm text-blue-600 mt-2">
+              Pre-filling form with your information...
+            </p>
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="bg-gray-100 rounded-full p-1">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500 ease-out"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+            <span className="text-sm font-semibold text-gray-700 min-w-[60px]">
+              {completionPercentage}% done
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 1) Client Identity */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          1. Client Identity
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+            Business / Company Name *
+            {isFieldComplete(formValues?.clientIdentity?.businessName) && (
+              <span className="text-green-600 text-xs">✓ Complete</span>
+            )}
+          </label>
+          <input
+            {...register('clientIdentity.businessName')}
+            className={getInputClassName('clientIdentity.businessName', !!errors.clientIdentity?.businessName)}
+            placeholder="Acme Inc."
+          />
+          {errors.clientIdentity?.businessName && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.businessName.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Your Full Name *
+          </label>
+          <input
+            {...register('clientIdentity.clientFullName')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Jane Smith"
+          />
+          {errors.clientIdentity?.clientFullName && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.clientFullName.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Role / Title *
+          </label>
+          <input
+            {...register('clientIdentity.roleTitle')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Head of Product"
+          />
+          {errors.clientIdentity?.roleTitle && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.roleTitle.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Email Address *
+          </label>
+          <input
+            {...register('clientIdentity.email')}
+            type="email"
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="jane@acme.com"
+          />
+          {errors.clientIdentity?.email && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.email.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            LinkedIn Profile URL (optional)
+          </label>
+          <input
+            {...register('clientIdentity.linkedinUrl')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="https://linkedin.com/in/..."
+          />
+          {errors.clientIdentity?.linkedinUrl && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.linkedinUrl.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Timezone *</label>
+          <input
+            {...register('clientIdentity.timezone')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="EST / PST / GMT+1 etc."
+          />
+          {errors.clientIdentity?.timezone && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.clientIdentity.timezone.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Billing Contact (if different)
+          </label>
+          <input
+            {...register('clientIdentity.billingContact')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="billing@acme.com or name"
+          />
+        </div>
+      </section>
+
+      {/* 2) Sprint Definition */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          2. Sprint Definition
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Sprint Type *
+          </label>
+          <select
+            {...register('sprintDefinition.sprintType')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select a sprint type...</option>
+            {sprintTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+          {errors.sprintDefinition?.sprintType && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.sprintDefinition.sprintType.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            One Sentence Outcome *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "By the end of this sprint we will have ___"
+          </p>
+          <input
+            {...register('sprintDefinition.oneSentenceOutcome')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="a validated checkout flow ready to ship"
+          />
+          {errors.sprintDefinition?.oneSentenceOutcome && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.sprintDefinition.oneSentenceOutcome.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Success Criteria *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            What does "done" mean for this sprint?
+          </p>
+          <textarea
+            {...register('sprintDefinition.successCriteria')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={3}
+            placeholder="Design is approved, devs have all specs, prototype is clickable..."
+          />
+          {errors.sprintDefinition?.successCriteria && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.sprintDefinition.successCriteria.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Non-Negotiables
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            What must not change? What needs to match?
+          </p>
+          <textarea
+            {...register('sprintDefinition.nonNegotiables')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Must use existing design system, can't change the nav..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Out of Scope
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            What is explicitly NOT included in this sprint?
+          </p>
+          <textarea
+            {...register('sprintDefinition.outOfScope')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Mobile app version, backend integration..."
+          />
+        </div>
+      </section>
+
+      {/* 3) Why Now */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">3. Why Now</h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Trigger Event *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            What's driving this now? (funding, hiring, launch, investor
+            pressure, churn, etc.)
+          </p>
+          <input
+            {...register('whyNow.triggerEvent')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Just raised Series A, need to scale fast"
+          />
+          {errors.whyNow?.triggerEvent && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.whyNow.triggerEvent.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Deadline / Timing *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            When do you need this by?
+          </p>
+          <input
+            {...register('whyNow.deadlineTiming')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Need this by Friday / before next sprint"
+          />
+          {errors.whyNow?.deadlineTiming && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.whyNow.deadlineTiming.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            What Happens If You Get It Wrong *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            What's at risk? (wasted eng time, missed window, confused users,
+            etc.)
+          </p>
+          <textarea
+            {...register('whyNow.consequencesOfGettingItWrong')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={3}
+            placeholder="Engineering team will build the wrong thing, waste 2 weeks..."
+          />
+          {errors.whyNow?.consequencesOfGettingItWrong && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.whyNow.consequencesOfGettingItWrong.message}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* 4) Product Context */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          4. Product Context
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Product Type *
+          </label>
+          <select
+            {...register('productContext.productType')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {productTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+          {errors.productContext?.productType && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.productContext.productType.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Target User *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Who is this product for?
+          </p>
+          <input
+            {...register('productContext.targetUser')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Sales managers at mid-size B2B SaaS companies"
+          />
+          {errors.productContext?.targetUser && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.productContext.targetUser.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Current State *
+          </label>
+          <select
+            {...register('productContext.currentState')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {currentStates.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
+          {errors.productContext?.currentState && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.productContext.currentState.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Build Cadence *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Where are you in the build process?
+          </p>
+          <select
+            {...register('productContext.buildCadence')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {buildCadences.map((cadence) => (
+              <option key={cadence} value={cadence}>
+                {cadence}
+              </option>
+            ))}
+          </select>
+          {errors.productContext?.buildCadence && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.productContext.buildCadence.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Stage Focus *
+          </label>
+          <select
+            {...register('productContext.stageFocus')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {stageFocuses.map((focus) => (
+              <option key={focus} value={focus}>
+                {focus}
+              </option>
+            ))}
+          </select>
+          {errors.productContext?.stageFocus && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.productContext.stageFocus.message}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* 5) Decision + Risk */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          5. Decision + Risk
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            The Key Decision You're Making *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "Should we build X or Y?"
+          </p>
+          <textarea
+            {...register('decisionRisk.keyDecision')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Should we build a wizard flow or single-page form?"
+          />
+          {errors.decisionRisk?.keyDecision && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.decisionRisk.keyDecision.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Knowns *</label>
+          <p className="text-sm text-gray-600 mb-2">
+            What are you confident about?
+          </p>
+          <textarea
+            {...register('decisionRisk.knowns')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Users want this feature, we have the tech..."
+          />
+          {errors.decisionRisk?.knowns && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.decisionRisk.knowns.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Unknowns *</label>
+          <p className="text-sm text-gray-600 mb-2">
+            What are you uncertain or guessing about?
+          </p>
+          <textarea
+            {...register('decisionRisk.unknowns')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Not sure if users will understand this flow..."
+          />
+          {errors.decisionRisk?.unknowns && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.decisionRisk.unknowns.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Top Assumptions *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "We assume users will..."
+          </p>
+          <textarea
+            {...register('decisionRisk.topAssumptions')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="We assume users will complete the form in one sitting..."
+          />
+          {errors.decisionRisk?.topAssumptions && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.decisionRisk.topAssumptions.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Current Signals You Already Have
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            User conversations, data, support tickets, demos, etc.
+          </p>
+          <textarea
+            {...register('decisionRisk.currentSignals')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="5 user interviews, support tickets showing confusion..."
+          />
+        </div>
+      </section>
+
+      {/* 6) Assets + Access */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          6. Assets + Access
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Website URL</label>
+          <input
+            {...register('assetsAccess.websiteUrl')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="https://acme.com"
+          />
+          {errors.assetsAccess?.websiteUrl && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.assetsAccess.websiteUrl.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Product Link / Staging Link
+          </label>
+          <input
+            {...register('assetsAccess.productLink')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="https://app.acme.com or staging link"
+          />
+          {errors.assetsAccess?.productLink && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.assetsAccess.productLink.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Figma Link</label>
+          <input
+            {...register('assetsAccess.figmaLink')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="https://figma.com/file/..."
+          />
+          {errors.assetsAccess?.figmaLink && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.assetsAccess.figmaLink.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Brand Guidelines
+          </label>
+          <input
+            {...register('assetsAccess.brandGuidelines')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Link to brand guidelines"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Design System / Component Library
+          </label>
+          <input
+            {...register('assetsAccess.designSystem')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Link to design system or Storybook"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Documentation Links
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            PRD, deck, Notion, Jira, Linear, etc.
+          </p>
+          <textarea
+            {...register('assetsAccess.docsLinks')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Notion: https://... Linear: https://..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Analytics Tools
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            GA, PostHog, Amplitude, Mixpanel (optional)
+          </p>
+          <input
+            {...register('assetsAccess.analyticsTools')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Google Analytics, PostHog"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Access Needed
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Flag any credentials or access we'll need (don't include actual
+            passwords here)
+          </p>
+          <textarea
+            {...register('assetsAccess.accessNeeded')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Will need Figma editor access, staging environment login..."
+          />
+        </div>
+      </section>
+
+      {/* 7) Stakeholders + Working Style */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          7. Stakeholders + Working Style
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Who Approves *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Founder vs head of product vs eng lead?
+          </p>
+          <input
+            {...register('stakeholders.whoApproves')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="CEO and Head of Product"
+          />
+          {errors.stakeholders?.whoApproves && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.stakeholders.whoApproves.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Who Will Build It *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Internal engineers / external devs?
+          </p>
+          <input
+            {...register('stakeholders.whoWillBuild')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Internal engineering team (3 devs)"
+          />
+          {errors.stakeholders?.whoWillBuild && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.stakeholders.whoWillBuild.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Preferred Communication *
+          </label>
+          <select
+            {...register('stakeholders.preferredCommunication')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {communicationPreferences.map((pref) => (
+              <option key={pref} value={pref}>
+                {pref}
+              </option>
+            ))}
+          </select>
+          {errors.stakeholders?.preferredCommunication && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.stakeholders.preferredCommunication.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Feedback Style *
+          </label>
+          <select
+            {...register('stakeholders.feedbackStyle')}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="">Select...</option>
+            {feedbackPreferences.map((pref) => (
+              <option key={pref} value={pref}>
+                {pref}
+              </option>
+            ))}
+          </select>
+          {errors.stakeholders?.feedbackStyle && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.stakeholders.feedbackStyle.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Availability *
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Review windows / time constraints
+          </p>
+          <textarea
+            {...register('stakeholders.availability')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Available for reviews 9am-5pm EST, need 24hr notice for calls..."
+          />
+          {errors.stakeholders?.availability && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.stakeholders.availability.message}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* 8) Commercial + Conversion Signals */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">
+          8. Commercial + Conversion Signals
+        </h2>
+        <p className="text-sm text-gray-600">
+          These fields help us understand your longer-term needs and are
+          optional.
+        </p>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Budget Comfort Level
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "We can pay for this if it works"
+          </p>
+          <input
+            {...register('commercial.budgetComfort')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Open to paying if this goes well..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Likelihood of Ongoing Help
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "We may need ongoing design support"
+          </p>
+          <textarea
+            {...register('commercial.ongoingHelpLikelihood')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="If this works, we'll likely need help with 2-3 more sprints..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Decision Timeline
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            "If good, we want to move next week"
+          </p>
+          <input
+            {...register('commercial.decisionTimeline')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Need to decide by end of month"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Objections</label>
+          <p className="text-sm text-gray-600 mb-2">
+            Any concerns? "We can probably do this ourselves" / "Don't want
+            process"
+          </p>
+          <textarea
+            {...register('commercial.objections')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Worried about turnaround time..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            What You've Tried Before
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Internal designers, freelancers, agencies?
+          </p>
+          <textarea
+            {...register('commercial.previousExperience')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Worked with 2 freelancers before, didn't get strategic enough..."
+          />
+        </div>
+      </section>
+
+      {/* 9) Next Steps */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold border-b pb-2">9. Next Steps</h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Kickoff Time Agreed
+          </label>
+          <input
+            {...register('nextSteps.kickoffTime')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Tomorrow 2pm EST"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Expected Delivery Date
+          </label>
+          <input
+            {...register('nextSteps.expectedDeliveryDate')}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Friday, Jan 31st"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            What You're Sending Us
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Figma links, docs, context materials
+          </p>
+          <textarea
+            {...register('nextSteps.clientWillSend')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="Will send Figma file and PRD by EOD..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            What We're Sending You
+          </label>
+          <p className="text-sm text-gray-600 mb-2">
+            Onboarding form, NDA, sprint agreement
+          </p>
+          <textarea
+            {...register('nextSteps.willardWillSend')}
+            className="w-full px-3 py-2 border rounded-md"
+            rows={2}
+            placeholder="NDA, sprint brief template..."
+          />
+        </div>
+      </section>
+
+      <div className="pt-6 border-t">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Onboarding Form'}
+        </button>
+      </div>
+    </form>
+  );
+}

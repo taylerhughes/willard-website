@@ -85,4 +85,330 @@ model OnboardingClient {
 
   // Track data source
   source String @default("zapier") // "zapier" or "form"
+
+  // Onboarding workflow status
+  onboardingStatus String @default("unapproved") // "unapproved" | "approved" | "updated"
+  approvedAt       DateTime?
+  approvedBy       String? // Email or name of person who approved
+
+  // Contract status
+  contractStatus   String @default("not_sent") // "not_sent" | "sent" | "signed"
+  contractSentAt   DateTime?
+  contractSignedAt DateTime?
+
+  // CRM Pipeline fields
+  pipelineStage     String @default("lead") // "lead" | "qualified" | "proposal" | "negotiation" | "closed_won" | "closed_lost"
+  stageChangedAt    DateTime @default(now())
+  dealValue         Decimal? @db.Decimal(10, 2) // Potential revenue value
+  expectedCloseDate DateTime?
+  lostReason        String? // Why deal was lost (if closed_lost)
+  assignedTo        String? // Team member assigned to this client
+
+  // Relationships
+  notes         Note[]
+  activityLogs  ActivityLog[]
+  projects      Project[]
+  issues        Issue[]
+  convertedToAccount Account? @relation("AccountConvertedFromLead")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    OnboardingClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  content   String
+  author    String // Name or email of person who created note
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    OnboardingClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  action    String // e.g., "stage_changed", "status_updated", "contract_sent", "note_added"
+  details   String? // JSON string with additional context
+  actor     String? // Who performed the action
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+}
+
+
+// ========================================
+// PM SYSTEM MODELS (Linear-style)
+// ========================================
+
+// Account represents a company/client entity
+model Account {
+  id          String   @id @default(cuid())
+  name        String   // Company/business name
+  industry    String?
+  website     String?
+  description String?
+  status      String   @default("active") // "active" | "inactive" | "prospect"
+
+  // Conversion tracking
+  convertedFromLeadId String? @unique
+  convertedFromLead   OnboardingClient? @relation("AccountConvertedFromLead", fields: [convertedFromLeadId], references: [id], onDelete: SetNull)
+  convertedAt         DateTime?
+
+  // NDA tracking via PandaDoc
+  ndaStatus      String?   @default("not_sent") // "not_sent" | "sent" | "viewed" | "completed" | "declined"
+  ndaSentAt      DateTime?
+  ndaSignedAt    DateTime?
+  ndaDocumentId  String?   // PandaDoc document ID
+  ndaDocumentUrl String?   // Link to view document in PandaDoc
+
+  // Relationships
+  contacts    Contact[]
+  projects    Project[]
+  issues      Issue[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([convertedFromLeadId])
+  @@index([ndaStatus])
+}
+
+// Contact represents an individual person at an account
+model Contact {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  role        String?  // Job title/role
+  isPrimary   Boolean  @default(false) // Primary contact for the account
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([email])
+}
+
+model User {
+  id         String   @id @default(cuid())
+  supabaseId String   @unique
+  email      String   @unique
+  name       String?
+  avatar     String?
+  role       String   @default("member") // "admin" | "member" | "viewer"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationships
+  ledProjects       Project[]          @relation("ProjectLead")
+  assignedIssues    Issue[]            @relation("IssueAssignee")
+  reportedIssues    Issue[]            @relation("IssueReporter")
+  comments          IssueComment[]
+  activities        IssueActivity[]
+  savedViews        SavedView[]
+  notifications     Notification[]
+
+  @@index([supabaseId])
+  @@index([email])
+}
+
+model Project {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  status            String    @default("active") // "planned" | "active" | "paused" | "completed" | "cancelled"
+  health            String    @default("on_track") // "on_track" | "at_risk" | "off_track"
+  targetStartDate   DateTime?
+  targetEndDate     DateTime?
+  color             String?   @default("#6366f1")
+  icon              String?   @default("folder")
+
+  // Relationships
+  leadId            String?
+  lead              User?     @relation("ProjectLead", fields: [leadId], references: [id], onDelete: SetNull)
+
+  accountId         String?
+  account           Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  // Legacy field - kept for backward compatibility during migration
+  clientId          String?
+  client            OnboardingClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  issues            Issue[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([leadId])
+  @@index([accountId])
+  @@index([clientId])
+  @@index([status])
+}
+
+model Cycle {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      String    @default("planned") // "planned" | "active" | "completed"
+
+  // Relationships
+  issues      Issue[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Issue {
+  id          String    @id @default(cuid())
+  identifier  String    @unique // e.g. "WIL-123"
+  title       String
+  description String?   // Markdown content
+
+  // Status & Priority
+  status      String    @default("backlog") // "backlog" | "todo" | "in_progress" | "in_review" | "blocked" | "done" | "cancelled"
+  priority    String    @default("none") // "none" | "low" | "medium" | "high" | "urgent"
+
+  // Estimation & Dates
+  estimate    Int?      // Story points or time estimate
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  // Relationships
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  cycleId     String?
+  cycle       Cycle?    @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+
+  clientId    String?
+  client      OnboardingClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  accountId   String?
+  account     Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  assigneeId  String?
+  assignee    User?     @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  reporterId  String?
+  reporter    User?     @relation("IssueReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  labels      IssueLabel[]
+  comments    IssueComment[]
+  activities  IssueActivity[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([cycleId])
+  @@index([clientId])
+  @@index([accountId])
+  @@index([assigneeId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model Label {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  color       String  @default("#gray")
+  description String?
+
+  issues      IssueLabel[]
+
+  createdAt   DateTime @default(now())
+}
+
+model IssueLabel {
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  labelId String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, labelId])
+  @@index([issueId])
+  @@index([labelId])
+}
+
+model IssueComment {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String   // Markdown content
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([issueId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model IssueActivity {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action    String   // "created" | "status_changed" | "assigned" | "priority_changed" | "commented" | etc.
+  details   String?  // JSON string with additional context
+  createdAt DateTime @default(now())
+
+  @@index([issueId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SavedView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  filters   String   // JSON string with filter configuration
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      String   // "assigned" | "mentioned" | "status_changed" | etc.
+  title     String
+  message   String?
+  issueId   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
 }

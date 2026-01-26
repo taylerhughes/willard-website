@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { generateIssueIdentifier, createIssueActivity } from '@/lib/pm/helpers';
 
 // Validation schema for Zapier webhook payload
 // Accept empty strings and convert to undefined for proper null handling
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
       data: {
         clientId,
         source: 'zapier',
+        pipelineStage: 'lead', // New clients from Zapier start as leads
 
         // All fields optional - convert empty strings to null
         businessName: toNullIfEmpty(clientData.businessName),
@@ -165,6 +167,60 @@ export async function POST(request: NextRequest) {
         willardWillSend: toNullIfEmpty(clientData.willardWillSend),
       },
     });
+
+    // Create activity log entry for new client from Zapier
+    await prisma.activityLog.create({
+      data: {
+        clientId: newClient.id,
+        action: 'client_created',
+        details: JSON.stringify({
+          source: 'zapier',
+          pipelineStage: 'lead',
+        }),
+        actor: 'Zapier',
+      },
+    });
+
+    // Get the first user to assign the issue to
+    const firstUser = await prisma.user.findFirst({
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Get the onboarding label
+    const onboardingLabel = await prisma.label.findFirst({
+      where: { name: 'onboarding' },
+    });
+
+    // Create issue for reviewing onboarding form
+    if (firstUser && onboardingLabel) {
+      const identifier = await generateIssueIdentifier();
+
+      const issue = await prisma.issue.create({
+        data: {
+          identifier,
+          title: 'Review and approve onboarding form',
+          description: `New onboarding form submitted by ${
+            newClient.businessName || newClient.clientFullName || 'client'
+          }\n\n_Automatically created from Zapier webhook_`,
+          status: 'todo',
+          priority: 'medium',
+          assigneeId: firstUser.id,
+          reporterId: firstUser.id,
+          clientId: newClient.id,
+          labels: {
+            create: {
+              labelId: onboardingLabel.id,
+            },
+          },
+        },
+      });
+
+      // Create issue activity
+      await createIssueActivity(issue.id, firstUser.id, 'created', {
+        source: 'zapier',
+        automatic: true,
+      });
+    }
 
     return NextResponse.json(
       {
