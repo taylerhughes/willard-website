@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import OnboardingForm from './onboarding-form';
 import ClientSummary from './client-summary';
 
@@ -14,6 +14,7 @@ export default function OnboardingWrapper({ clientId: propClientId }: Onboarding
   const [clientData, setClientData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const urlClientId = propClientId || searchParams.get('clientId');
@@ -25,8 +26,20 @@ export default function OnboardingWrapper({ clientId: propClientId }: Onboarding
   const fetchClientData = async (clientId: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/client/${clientId}`);
+      // Include token in request if present
+      const token = searchParams.get('token');
+      const url = token
+        ? `/api/client/${clientId}?token=${encodeURIComponent(token)}`
+        : `/api/client/${clientId}`;
+
+      const response = await fetch(url);
       const result = await response.json();
+
+      // Check if token is expired or invalid
+      if (response.status === 401 && result.message?.includes('expired')) {
+        router.push('/expired');
+        return;
+      }
 
       if (result.success && result.rawClient) {
         setClientData(result.rawClient);
@@ -70,6 +83,7 @@ export default function OnboardingWrapper({ clientId: propClientId }: Onboarding
     <div>
       <OnboardingForm
         onboardingStatus={clientData?.onboardingStatus || 'unapproved'}
+        initialConsent={clientData?.privacyPolicyConsent || false}
         onSubmitSuccess={() => {
           if (clientData?.clientId) {
             fetchClientData(clientData.clientId);

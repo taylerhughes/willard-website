@@ -19,22 +19,52 @@ import {
 interface OnboardingFormProps {
   onboardingStatus?: string;
   onSubmitSuccess?: () => void;
+  initialConsent?: boolean;
 }
 
-export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubmitSuccess }: OnboardingFormProps) {
+export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubmitSuccess, initialConsent = false }: OnboardingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(onboardingStatus);
+  const [consentPrivacy, setConsentPrivacy] = useState(initialConsent);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchParams = useSearchParams();
 
   const isApproved = currentStatus === 'approved';
 
+  // Check if user has consented (required to enable form)
+  const hasConsented = consentPrivacy;
+
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Handle consent change and persist to database
+  const handleConsentChange = async (checked: boolean) => {
+    setConsentPrivacy(checked);
+
+    if (clientId) {
+      try {
+        const token = searchParams.get('token');
+        const url = token
+          ? `/api/client/${clientId}?token=${encodeURIComponent(token)}`
+          : `/api/client/${clientId}`;
+
+        await fetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            privacyPolicyConsent: checked,
+            privacyConsentedAt: checked ? new Date().toISOString() : null
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving consent:', error);
+      }
+    }
   };
 
   const {
@@ -170,6 +200,12 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
     }
 
     // Check if at least one field has a non-empty value
+    // Don't save if user hasn't consented yet
+    if (!hasConsented) {
+      console.log('Auto-save: User has not consented yet, skipping');
+      return;
+    }
+
     const hasMeaningfulData = Object.values(formValues).some((section) => {
       if (section && typeof section === 'object') {
         return Object.values(section).some(value => isFieldComplete(value));
@@ -225,7 +261,7 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [JSON.stringify(formValues), clientId]);
+  }, [JSON.stringify(formValues), clientId, hasConsented]);
 
   // Initialize expanded sections based on completion status
   useEffect(() => {
@@ -258,8 +294,9 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
     const baseClass = 'w-full px-3 py-2 border rounded-md transition-all duration-200';
     const completionClass = isComplete ? 'border-green-500 bg-green-50' : 'border-gray-300';
     const errorClass = hasError ? 'border-red-500 bg-red-50' : '';
+    const disabledClass = !hasConsented ? 'opacity-50 cursor-not-allowed bg-gray-100' : '';
 
-    return `${baseClass} ${errorClass || completionClass}`;
+    return `${baseClass} ${errorClass || completionClass} ${disabledClass}`;
   };
 
   // Calculate completion percentage
@@ -357,12 +394,23 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
   return (
     <div className="onboarding-form max-w-4xl mx-auto space-y-6">
       {/* Logo */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-4">
         <img
           src="/logo.svg"
           alt="Willard Logo"
           className="h-12 w-auto"
         />
+      </div>
+
+      {/* Trust Badge */}
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center justify-center gap-2 text-sm">
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span className="font-medium text-green-900">Your Information is Secure</span>
+          <span className="text-green-700">• 256-bit encryption • Auto-saved • Private</span>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -372,6 +420,54 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
             Help us understand your needs so we can deliver the best possible
             sprint outcome.
           </p>
+        </div>
+
+        {/* Privacy & Consent Section - MUST BE FIRST */}
+        <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Privacy Policy Required</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Before entering any information, please review and accept our privacy policy.
+                </p>
+
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={consentPrivacy}
+                    onChange={(e) => handleConsentChange(e.target.checked)}
+                    className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                    I have read and agree to the{' '}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 hover:text-indigo-700 underline font-medium"
+                    >
+                      Privacy Policy
+                    </a>
+                    .
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {!hasConsented && (
+            <div className="mt-3 text-center">
+              <p className="text-sm text-red-800">
+                You must accept the privacy policy before entering information.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Progress Bar */}
@@ -396,21 +492,24 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Saving...</span>
+                <span>Securely saving...</span>
               </>
             ) : lastSaved ? (
               <>
                 <svg className="h-3 w-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Auto-saved {formatTimeAgo(lastSaved)}</span>
+                <span>Securely saved {formatTimeAgo(lastSaved)}</span>
               </>
             ) : (
-              <span>Changes will be auto-saved</span>
+              <span>Changes will be securely auto-saved</span>
             )}
           </div>
         )}
       </div>
+
+      {/* All form fields - disabled until consent given */}
+      <fieldset disabled={!hasConsented} className={!hasConsented ? 'pointer-events-none' : ''}>
 
       {/* 1) Client Identity */}
       <section className="">
@@ -1158,6 +1257,9 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
         )}
       </section>
 
+      </fieldset>
+      {/* End of disabled form fields */}
+
       {/* CTA Box - Let Tayler Know It's Complete */}
       {clientId && (
         <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl">
@@ -1168,6 +1270,11 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
             <p className="text-gray-700 mb-4">
               Once you've completed all the information above, let Tayler know your onboarding form is ready for review.
             </p>
+            {!consentPrivacy && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-4">
+                Please review and accept the privacy terms above before submitting.
+              </p>
+            )}
             <a
               href={`mailto:tayler@willardagency.com?subject=Onboarding Complete - ${clientId}&body=Hi Tayler,%0D%0A%0D%0AI've completed my onboarding form and it's ready for your review.%0D%0A%0D%0AView my form: ${typeof window !== 'undefined' ? window.location.origin : ''}/mini-sprint?clientId=${clientId}`}
               className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
@@ -1183,6 +1290,30 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
           </div>
         </div>
       )}
+
+      {/* SSL/Security Footer */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            </svg>
+            <span>256-bit SSL Encryption</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Secure Data Storage</span>
+          </div>
+          <a href="/privacy" className="flex items-center gap-1 hover:text-gray-700 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="underline">Privacy Policy</span>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

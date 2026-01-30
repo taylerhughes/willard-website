@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { onboardingFormSchema } from '@/types/onboarding';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { logAccess } from '@/lib/access-log';
 
 // Extended schema to include optional clientId
 const submissionSchema = onboardingFormSchema.extend({
@@ -80,6 +83,27 @@ const partialSubmissionSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting check
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimit(identifier);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
 
     // Try full validation first, fall back to partial validation for auto-save
@@ -212,9 +236,12 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new client record (no pre-fill from Zapier)
+      // Use cryptographically secure UUID instead of predictable timestamp
+      const secureClientId = randomUUID();
+
       savedClient = await prisma.onboardingClient.create({
         data: {
-          clientId: `form-${Date.now()}`, // Generate clientId for direct submissions
+          clientId: secureClientId,
           ...flatData,
           source: 'form',
         },
@@ -222,6 +249,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Onboarding form submitted:', savedClient.id);
+
+    // Log form submission for security audit
+    const action = isPartialSave ? 'edit' : 'submit';
+    await logAccess(savedClient.clientId, action, request);
 
     // Optional: Send notifications or webhooks
     // await sendToSlack(validatedData);

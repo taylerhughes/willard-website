@@ -79,6 +79,8 @@ export default function ClientOverview({
 }: ClientOverviewProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isSendingContract, setIsSendingContract] = useState(false);
+  const [isSendingOnboarding, setIsSendingOnboarding] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState<string | null>(null);
 
   const updateClient = async (field: string, value: any) => {
     const response = await fetch(`/api/client/${client.clientId}`, {
@@ -131,6 +133,39 @@ export default function ClientOverview({
       console.error('Error updating contract:', err);
     } finally {
       setIsSendingContract(false);
+    }
+  };
+
+  const handleSendOnboardingLink = async () => {
+    if (!client.email) {
+      setSendingMessage('Error: No email address found for this client');
+      setTimeout(() => setSendingMessage(null), 5000);
+      return;
+    }
+
+    setIsSendingOnboarding(true);
+    setSendingMessage(null);
+
+    try {
+      const response = await fetch(`/api/client/${client.clientId}/send-onboarding`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send onboarding link');
+      }
+
+      setSendingMessage(`✓ Onboarding link sent to ${client.email}`);
+      setTimeout(() => setSendingMessage(null), 5000);
+      onClientUpdated();
+    } catch (err) {
+      console.error('Error sending onboarding link:', err);
+      setSendingMessage(`Error: ${err instanceof Error ? err.message : 'Failed to send email'}`);
+      setTimeout(() => setSendingMessage(null), 5000);
+    } finally {
+      setIsSendingOnboarding(false);
     }
   };
 
@@ -295,7 +330,34 @@ export default function ClientOverview({
 
       {/* Status Tracking */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Tracking</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Status Tracking</h3>
+
+          {/* Send Onboarding Link Button */}
+          <button
+            onClick={handleSendOnboardingLink}
+            disabled={isSendingOnboarding || !client.email}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title={!client.email ? 'Add client email first' : 'Send secure onboarding form link via email'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            {isSendingOnboarding ? 'Sending...' : 'Send Onboarding Link'}
+          </button>
+        </div>
+
+        {/* Success/Error Message */}
+        {sendingMessage && (
+          <div className={`mb-4 p-3 rounded-lg text-sm ${
+            sendingMessage.startsWith('✓')
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            {sendingMessage}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Onboarding Status */}
           <div>

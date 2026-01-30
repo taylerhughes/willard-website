@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { verifyAccessToken } from '@/lib/access-token';
+import { logAccess } from '@/lib/access-log';
 
 const updateClientSchema = z.object({
   // CRM fields
@@ -68,6 +71,27 @@ export async function GET(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
+    // Rate limiting check
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimit(identifier);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+          },
+        }
+      );
+    }
+
     const { clientId } = await params;
 
     if (!clientId) {
@@ -79,6 +103,53 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    // Check for access token in query parameters
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token');
+
+    // Check if user is authenticated (admin access)
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // If not authenticated admin, require valid token
+    if (!user) {
+      if (!token) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Access token required',
+          },
+          { status: 401 }
+        );
+      }
+
+      const tokenVerification = await verifyAccessToken(token);
+
+      if (!tokenVerification.valid) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: tokenVerification.error || 'Invalid or expired access token',
+          },
+          { status: 401 }
+        );
+      }
+
+      // Verify token is for this client
+      if (tokenVerification.clientId !== clientId) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Access token does not match client',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Log access for security audit
+    await logAccess(clientId, 'view', request);
 
     // Fetch client from database
     const client = await prisma.onboardingClient.findUnique({
