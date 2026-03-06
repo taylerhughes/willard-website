@@ -5,7 +5,7 @@ import "./globals.css";
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
-  weight: ["400", "600"],
+  weight: ["400", "500", "600"],
 });
 
 const bebas = Bebas_Neue({
@@ -17,7 +17,7 @@ const bebas = Bebas_Neue({
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["500"],
+  weight: ["500", "600"],
 });
 
 const interTight = Inter_Tight({
@@ -42,11 +42,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <body
-        className={`${figtree.variable} ${bebas.variable} ${poppins.variable} ${interTight.variable} antialiased`}
+        className={`${figtree.variable} ${bebas.variable} ${poppins.variable} ${interTight.variable} antialiased m-0 p-0 h-full`}
       >
-        {children}
+        <div className="bg-[#fafafa] relative min-h-screen w-full font-figtree p-8">
+          {children}
+        </div>
       </body>
     </html>
   );

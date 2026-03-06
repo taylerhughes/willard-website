@@ -5,6 +5,29 @@
   --font-bebas: var(--font-bebas);
   --font-poppins: var(--font-poppins);
   --font-inter-tight: var(--font-inter-tight);
+
+  --font-family-figtree: var(--font-figtree), 'Figtree', sans-serif;
+  --font-family-bebas: var(--font-bebas), 'Bebas Neue', sans-serif;
+  --font-family-poppins: var(--font-poppins), 'Poppins', sans-serif;
+  --font-family-inter-tight: var(--font-inter-tight), 'Inter Tight', sans-serif;
+}
+
+@layer utilities {
+  .font-figtree {
+    font-family: var(--font-family-figtree);
+  }
+
+  .font-bebas {
+    font-family: var(--font-family-bebas);
+  }
+
+  .font-poppins {
+    font-family: var(--font-family-poppins);
+  }
+
+  .font-inter-tight {
+    font-family: var(--font-family-inter-tight);
+  }
 }
 
 /* Hide scrollbars in Calendly iframe */
