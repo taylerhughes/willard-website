@@ -134,18 +134,18 @@ export default function SiteHeader({
 
       {/* Breadcrumb Section */}
       {showBreadcrumb && (
-        <div className="bg-white px-4 md:px-8 lg:px-12 py-4 md:py-6 flex flex-col md:flex-row items-start md:justify-between gap-4 md:gap-0 rounded-b-3xl">
+        <div className="bg-white px-4 md:px-8 lg:px-12 py-4 md:py-6 flex flex-col md:flex-row items-start md:justify-between gap-4 md:gap-4 rounded-b-3xl">
           <h1 className="font-bebas text-[28px] md:text-[34px] font-semibold text-[#202020]">/ home</h1>
 
-          <div className="flex gap-4 md:gap-6 items-center w-full md:w-auto">
+          <div className="flex gap-4 md:gap-6 items-center w-full md:w-auto m-width-[40%] w-auto">
             {/* Signal Engine Tab */}
             <div className="flex flex-col gap-2 px-3 md:px-4 py-2 md:py-3">
               <div className="flex gap-3 md:gap-4 items-center">
                 <Image src="/assets/activity-icon.svg" alt="" width={20} height={20} className="md:w-[24px] md:h-[24px]" />
                 <p className="font-semibold text-[16px] md:text-[18px] text-[#202020]">Signal Engine™</p>
               </div>
-              <p className="text-[14px] md:text-[16px] text-[#202020] pl-8 md:pl-10 max-w-[154px] leading-tight">
-                easy payments in all transport modes
+              <p className="text-[14px] md:text-[16px] text-[#202020] pl-8 md:pl-10 max-w-[400px] leading-tight">
+                The Signal Engine™ is our proprietary framework for turning user research into confident product decisions — without slowing teams down.
               </p>
             </div>
           </div>
