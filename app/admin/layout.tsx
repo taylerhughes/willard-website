@@ -5,6 +5,9 @@ import CommandPaletteProvider from '@/components/pm/command-palette-provider';
 import KeyboardShortcutsProvider from '@/components/pm/keyboard-shortcuts-provider';
 import { Toaster } from 'sonner';
 
+// Force dynamic rendering to prevent build-time errors with Supabase
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({
   children,
 }: {
