@@ -126,8 +126,7 @@ export default function Home() {
         {/* Testimonial Section */}
         <section className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-12 lg:p-32 my-6 md:my-8 mx-4 md:mx-6 flex flex-col items-center gap-6 md:gap-8 max-w-[1811px]">
           <p className="text-[18px] md:text-[28px] lg:text-[36px] leading-[1.5] md:leading-[1.49] tracking-[-0.24px] md:tracking-[-0.36px] text-[#292929] text-center max-w-[95%] md:max-w-[90%] lg:max-w-[1409px]">
-            "Willard quickly demonstrated strong product design knowledge and a genuine commitment to understanding our users and problem space. Even in a short engagement, they integrated seamlessly into our team and contributed thoughtful, high-quality design work. They approached the work with care, curiosity, and professionalism."
-          </p>
+Tayler quickly demonstrated strong product design instincts and a genuine commitment to understanding our users and problem space. Even in a short engagement, he integrated seamlessly into our team and contributed thoughtful, high-quality design work. He approached the work with care, curiosity, and professionalism.          </p>
           <div className="flex flex-col items-center gap-3 md:gap-3.5">
             <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full overflow-hidden">
               <Image
