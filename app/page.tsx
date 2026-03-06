@@ -45,15 +45,29 @@ export default function Home() {
               <p className="font-medium text-[14px] md:text-[16px] lg:text-[18px] text-[#202020]">Product Management</p>
             </div>
             <div className="flex gap-3 md:gap-4 items-center">
-              <Image src={imgActivityIcon} alt="" width={20} height={20} className="md:w-[24px] md:h-[24px]" />
+              <svg id="user" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.43255 3H16.8673C19.8154 3 21.6504 5.08119 21.6504 8.02638V15.9736C21.6504 18.9188 19.8154 21 16.8663 21H8.43255C5.48444 21 3.65039 18.9188 3.65039 15.9736V8.02638C3.65039 5.08119 5.4932 3 8.43255 3Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path opacity="0.4" d="M7.48926 20.9202V20.0153C7.48926 18.3321 8.82223 16.2305 12.646 16.2305C16.4795 16.2305 17.8125 18.3126 17.8125 19.9959V20.9202" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M15.9454 10.5259C15.9454 12.3464 14.4704 13.8214 12.6499 13.8214C10.8295 13.8214 9.35352 12.3464 9.35352 10.5259C9.35352 8.7055 10.8295 7.23047 12.6499 7.23047C14.4704 7.23047 15.9454 8.7055 15.9454 10.5259Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
               <p className="font-medium text-[14px] md:text-[16px] lg:text-[18px] text-[#202020]">User Experience</p>
             </div>
             <div className="flex gap-3 md:gap-4 items-center">
-              <Image src={imgActivityIcon} alt="" width={20} height={20} className="md:w-[24px] md:h-[24px]" />
+<svg id="Target" width="24" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path opacity="0.4" d="M20.989 9.98114C21.19 10.7221 21.296 11.5011 21.296 12.3091C21.296 17.2251 17.314 21.2072 12.399 21.2072C7.48299 21.2072 3.5 17.2251 3.5 12.3091C3.5 7.40314 7.48299 3.41016 12.399 3.41016C13.139 3.41016 13.86 3.50714 14.553 3.67114" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M12.4081 7.5H12.3991C9.73311 7.5 7.57812 9.65502 7.57812 12.309C7.57812 14.974 9.73311 17.128 12.3991 17.128C14.9671 17.128 17.0831 15.108 17.1981 12.559" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M21.5003 5.58136H19.2793V3.35938" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M13.709 11.1541L19.281 5.58203" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
               <p className="font-medium text-[14px] md:text-[16px] lg:text-[18px] text-[#202020]">Product Strategy</p>
             </div>
             <div className="flex gap-3 md:gap-4 items-center">
-              <Image src={imgActivityIcon} alt="" width={20} height={20} className="md:w-[24px] md:h-[24px]" />
+<svg id="UI" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.03857 8.40002C8.45264 8.40002 8.78857 8.73602 8.78857 9.15002V12.7C8.78857 13.528 9.46045 14.2 10.2886 14.2C11.1167 14.2 11.7886 13.528 11.7886 12.7V9.15002C11.7886 8.73602 12.1245 8.40002 12.5386 8.40002C12.9526 8.40002 13.2886 8.73602 13.2886 9.15002V12.7C13.2886 14.357 11.9458 15.7 10.2886 15.7C8.63135 15.7 7.28857 14.357 7.28857 12.7V9.15002C7.28857 8.73602 7.62451 8.40002 8.03857 8.40002Z" fill="#000000"></path>
+<path d="M16.0386 8.40002C16.4526 8.40002 16.7886 8.73602 16.7886 9.15002V14.75C16.7886 15.164 16.4526 15.5 16.0386 15.5C15.6245 15.5 15.2886 15.164 15.2886 14.75V9.15002C15.2886 8.73602 15.6245 8.40002 16.0386 8.40002Z" fill="#000000"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M3.77881 3.64697C4.76367 2.59094 6.16553 2 7.8208 2H16.2554C17.9146 2 19.3174 2.591 20.3018 3.64801C21.2798 4.698 21.7886 6.14899 21.7886 7.776V15.724C21.7886 17.351 21.2798 18.802 20.3018 19.852C19.3174 20.909 17.9146 21.5 16.2544 21.5H7.8208C6.16064 21.5 4.75879 20.909 3.77441 19.852C2.79639 18.801 2.28857 17.351 2.28857 15.724V7.776C2.28857 6.14801 2.7998 4.698 3.77881 3.64697ZM4.87549 4.66998C4.19873 5.39697 3.78857 6.46002 3.78857 7.776V15.724C3.78857 17.042 4.19678 18.104 4.87256 18.83C5.54248 19.55 6.53174 20 7.8208 20H16.2544C17.5435 20 18.5327 19.55 19.2036 18.83C19.8794 18.104 20.2886 17.041 20.2886 15.724V7.776C20.2886 6.45898 19.8794 5.396 19.2036 4.66998C18.5337 3.95001 17.5444 3.5 16.2554 3.5H7.8208C6.53662 3.5 5.54736 3.94897 4.87549 4.66998Z" fill="#000000"></path>
+</svg>
+
               <p className="font-medium text-[14px] md:text-[16px] lg:text-[18px] text-[#202020]">Visual Design</p>
             </div>
           </div>
