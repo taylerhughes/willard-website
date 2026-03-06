@@ -27,8 +27,27 @@ const interTight = Inter_Tight({
 });
 
 export const metadata: Metadata = {
-  title: "Willard",
-  description: "Project Management & CRM System",
+  title: {
+    default: "Tayler Hughes | Product Design Consultant",
+    template: "%s | Tayler Hughes"
+  },
+  description: "Product design consultant helping funded startups shape ideas into products people actually want to use. 14 years experience, 300 million users, YC-backed companies.",
+  keywords: ["product design", "UX design", "user research", "product strategy", "startup consulting", "YC", "Y Combinator"],
+  authors: [{ name: "Tayler Hughes" }],
+  creator: "Tayler Hughes",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://taylerhughes.co.uk",
+    siteName: "Tayler Hughes",
+    title: "Tayler Hughes | Product Design Consultant",
+    description: "Product design consultant helping funded startups shape ideas into products people actually want to use.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tayler Hughes | Product Design Consultant",
+    description: "Product design consultant helping funded startups shape ideas into products people actually want to use.",
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
