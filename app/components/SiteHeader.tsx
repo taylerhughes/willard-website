@@ -28,7 +28,7 @@ export default function SiteHeader({
           <div className="relative h-[32px] w-[32px] md:h-[37px] md:w-[37px]">
             <Image
               src={imgLogo}
-              alt="Willard"
+              alt="Tayler Hughes"
               fill
               className="object-contain"
             />

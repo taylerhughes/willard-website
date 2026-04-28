@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Introduction</h2>
             <p className="text-gray-700 leading-relaxed">
-              Willard Agency ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our onboarding form and services.
+              Tayler Hughes ("I," "me," or "my") is committed to protecting your privacy. This Privacy Policy explains how I collect, use, disclose, and safeguard your information when you use my onboarding form and services.
             </p>
           </section>
 
@@ -77,8 +77,8 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Data Retention</h2>
             <p className="text-gray-700 leading-relaxed">
               We retain your information for as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. You may request deletion of your data at any time by contacting us at{' '}
-              <a href="mailto:privacy@willardagency.com" className="text-indigo-600 hover:text-indigo-700">
-                privacy@willardagency.com
+              <a href="mailto:hello@taylerhughes.com" className="text-indigo-600 hover:text-indigo-700">
+                hello@taylerhughes.com
               </a>
               .
             </p>
@@ -99,8 +99,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
               To exercise any of these rights, please contact us at{' '}
-              <a href="mailto:privacy@willardagency.com" className="text-indigo-600 hover:text-indigo-700">
-                privacy@willardagency.com
+              <a href="mailto:hello@taylerhughes.com" className="text-indigo-600 hover:text-indigo-700">
+                hello@taylerhughes.com
               </a>
               .
             </p>
@@ -140,14 +140,14 @@ export default function PrivacyPage() {
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
               <p className="text-gray-700">
                 <strong>Email:</strong>{' '}
-                <a href="mailto:privacy@willardagency.com" className="text-indigo-600 hover:text-indigo-700">
-                  privacy@willardagency.com
+                <a href="mailto:hello@taylerhughes.com" className="text-indigo-600 hover:text-indigo-700">
+                  hello@taylerhughes.com
                 </a>
               </p>
               <p className="text-gray-700">
                 <strong>General Inquiries:</strong>{' '}
-                <a href="mailto:tayler@willardagency.com" className="text-indigo-600 hover:text-indigo-700">
-                  tayler@willardagency.com
+                <a href="mailto:hello@taylerhughes.com" className="text-indigo-600 hover:text-indigo-700">
+                  hello@taylerhughes.com
                 </a>
               </p>
             </div>

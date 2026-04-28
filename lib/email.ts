@@ -28,8 +28,8 @@ export async function sendOnboardingLink({
   clientName,
   clientId,
   token,
-  fromEmail = process.env.FROM_EMAIL || 'tayler@willardagency.com',
-  fromName = 'Tayler Hughes - Willard Agency',
+  fromEmail = process.env.FROM_EMAIL || 'hello@taylerhughes.com',
+  fromName = 'Tayler Hughes',
 }: SendOnboardingLinkParams): Promise<{ success: boolean; error?: string }> {
   try {
     // Validate SES credentials
@@ -38,7 +38,7 @@ export async function sendOnboardingLink({
     }
 
     // Generate the secure onboarding link
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://willardagency.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://taylerhughes.com';
     const onboardingLink = `${baseUrl}/mini-sprint?clientId=${clientId}&token=${token}`;
 
     // Email HTML template
@@ -59,7 +59,7 @@ export async function sendOnboardingLink({
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 32px; text-align: center; border-bottom: 1px solid #e5e7eb;">
-              <img src="${baseUrl}/logo.svg" alt="Willard Agency" style="height: 48px; width: auto; margin-bottom: 16px;" />
+              <img src="${baseUrl}/logo.svg" alt="Tayler Hughes" style="height: 48px; width: auto; margin-bottom: 16px;" />
               <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #111827;">Complete Your Onboarding</h1>
             </td>
           </tr>
@@ -71,7 +71,7 @@ export async function sendOnboardingLink({
                 Hi ${clientName},
               </p>
               <p style="margin: 0 0 24px; font-size: 16px; line-height: 24px; color: #374151;">
-                Thanks for choosing Willard Agency for your design sprint! To get started, please complete our onboarding form. This helps us understand your needs and deliver the best possible outcome.
+                Thanks for choosing me for your design sprint! To get started, please complete the onboarding form. This helps me understand your needs and deliver the best possible outcome.
               </p>
 
               <!-- CTA Button -->
@@ -117,11 +117,11 @@ export async function sendOnboardingLink({
           <tr>
             <td style="padding: 24px 40px; border-top: 1px solid #e5e7eb; text-align: center;">
               <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">
-                Questions? Reply to this email or contact us at<br>
-                <a href="mailto:tayler@willardagency.com" style="color: #4f46e5; text-decoration: none;">tayler@willardagency.com</a>
+                Questions? Reply to this email or contact me at<br>
+                <a href="mailto:hello@taylerhughes.com" style="color: #4f46e5; text-decoration: none;">hello@taylerhughes.com</a>
               </p>
               <p style="margin: 16px 0 0; font-size: 12px; color: #9ca3af;">
-                © ${new Date().getFullYear()} Willard Agency. All rights reserved.
+                © ${new Date().getFullYear()} Tayler Hughes. All rights reserved.
               </p>
             </td>
           </tr>
@@ -150,7 +150,7 @@ export async function sendOnboardingLink({
     const textContent = `
 Hi ${clientName},
 
-Thanks for choosing Willard Agency for your design sprint! To get started, please complete our onboarding form:
+Thanks for choosing me for your design sprint! To get started, please complete the onboarding form:
 
 ${onboardingLink}
 
@@ -161,16 +161,16 @@ Your Information is Secure:
 • Your information is never shared with third parties
 • The form auto-saves as you work
 
-Questions? Reply to this email or contact us at tayler@willardagency.com
+Questions? Reply to this email or contact me at hello@taylerhughes.com
 
-© ${new Date().getFullYear()} Willard Agency. All rights reserved.
+© ${new Date().getFullYear()} Tayler Hughes. All rights reserved.
     `;
 
     // Send email
     const info = await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
       to,
-      subject: 'Complete Your Willard Agency Onboarding',
+      subject: 'Complete Your Onboarding',
       text: textContent,
       html: htmlContent,
     });

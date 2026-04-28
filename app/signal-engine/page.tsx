@@ -45,7 +45,7 @@ export default function SignalEngine() {
               Back to Home
             </Link>
             <a
-              href="mailto:hello@willard.co.uk"
+              href="mailto:hello@taylerhughes.com"
               className="bg-white border-2 border-black text-black rounded-xl px-6 py-3 hover:bg-black hover:text-white transition-all text-[16px] md:text-[18px]"
             >
               Get Notified

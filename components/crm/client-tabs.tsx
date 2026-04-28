@@ -258,7 +258,7 @@ function OnboardingDetails({ client }: { client: any }) {
         { label: 'Kickoff Time', value: client.kickoffTime, fieldName: 'kickoffTime' },
         { label: 'Expected Delivery Date', value: client.expectedDeliveryDate, fieldName: 'expectedDeliveryDate' },
         { label: 'Client Will Send', value: client.clientWillSend, fieldName: 'clientWillSend', multiline: true },
-        { label: 'Willard Will Send', value: client.willardWillSend, fieldName: 'willardWillSend', multiline: true },
+        { label: 'Tayler Will Send', value: client.willardWillSend, fieldName: 'willardWillSend', multiline: true },
       ],
     },
   ];

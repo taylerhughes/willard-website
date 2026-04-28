@@ -36,13 +36,13 @@ export default function ExpiredLinkPage() {
               Need a new link?
             </h3>
             <p className="text-sm text-blue-800">
-              Please contact your Willard representative to receive a new secure access link. They can generate a fresh link that will be valid for another 7 days.
+              Please contact Tayler to receive a new secure access link. A fresh link will be valid for another 7 days.
             </p>
           </div>
 
           {/* Contact Button */}
           <a
-            href="mailto:tayler@willardagency.com?subject=Request New Onboarding Link&body=Hi,%0D%0A%0D%0AI need a new onboarding form link. My previous link has expired.%0D%0A%0D%0AThank you!"
+            href="mailto:hello@taylerhughes.com?subject=Request New Onboarding Link&body=Hi,%0D%0A%0D%0AI need a new onboarding form link. My previous link has expired.%0D%0A%0D%0AThank you!"
             className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors w-full justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@ export default function ExpiredLinkPage() {
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            Contact Willard Agency
+            Contact Tayler
           </a>
 
           {/* Security Note */}

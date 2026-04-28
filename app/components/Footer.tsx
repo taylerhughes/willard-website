@@ -27,11 +27,11 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Willard Logo */}
+        {/* Logo */}
         <div className="flex justify-center">
           <Image
             src={imgLogo}
-            alt="Willard"
+            alt="Tayler Hughes"
             width={120}
             height={40}
             className="object-contain w-[60px] md:w-[70px] lg:w-[80px] h-auto"

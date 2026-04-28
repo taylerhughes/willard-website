@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Content-Disposition': `attachment; filename="willard-data-export-${clientId}.json"`,
+          'Content-Disposition': `attachment; filename="data-export-${clientId}.json"`,
         },
       }
     );

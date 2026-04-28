@@ -81,7 +81,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
       {/* Logo / Brand */}
       <div className="p-4 border-b border-gray-200">
         <Link href="/admin" className="flex items-center gap-2">
-          <img src="/logo.svg" alt="Willard" className="h-8" />
+          <img src="/logo.svg" alt="Tayler Hughes" className="h-8" />
         </Link>
       </div>
 

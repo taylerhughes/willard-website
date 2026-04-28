@@ -397,7 +397,7 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
       <div className="flex justify-center mb-4">
         <img
           src="/logo.svg"
-          alt="Willard Logo"
+          alt="Logo"
           className="h-12 w-auto"
         />
       </div>
@@ -415,9 +415,9 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
 
       <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold">Willard Mini Sprint Onboarding</h1>
+          <h1 className="text-3xl font-bold">Mini Sprint Onboarding</h1>
           <p className="text-gray-600">
-            Help us understand your needs so we can deliver the best possible
+            Help me understand your needs so I can deliver the best possible
             sprint outcome.
           </p>
         </div>
@@ -1276,7 +1276,7 @@ export default function OnboardingForm({ onboardingStatus = 'unapproved', onSubm
               </p>
             )}
             <a
-              href={`mailto:tayler@willardagency.com?subject=Onboarding Complete - ${clientId}&body=Hi Tayler,%0D%0A%0D%0AI've completed my onboarding form and it's ready for your review.%0D%0A%0D%0AView my form: ${typeof window !== 'undefined' ? window.location.origin : ''}/mini-sprint?clientId=${clientId}`}
+              href={`mailto:hello@taylerhughes.com?subject=Onboarding Complete - ${clientId}&body=Hi Tayler,%0D%0A%0D%0AI've completed my onboarding form and it's ready for your review.%0D%0A%0D%0AView my form: ${typeof window !== 'undefined' ? window.location.origin : ''}/mini-sprint?clientId=${clientId}`}
               className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

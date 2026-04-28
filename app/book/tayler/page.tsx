@@ -81,7 +81,7 @@ export default function BookTayler() {
           <div className="flex-1 lg:flex-none lg:w-auto flex flex-col">
             {/* Logo */}
             <div className="w-[49px] h-[49px] mb-8 lg:absolute lg:left-[79px] lg:top-[79px] lg:mb-0">
-              <img alt="Willard Logo" className="block max-w-none size-full" src={imgVector} />
+              <img alt="Logo" className="block max-w-none size-full" src={imgVector} />
             </div>
 
             {/* Content Container */}
@@ -151,7 +151,7 @@ export default function BookTayler() {
                 Prepared by Tayler Hughes January 1st, 2026
               </p>
               <p className="font-bebas text-[#404040] text-[28px] text-center uppercase">
-                Willard
+                Tayler Hughes
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function BookTayler() {
           Prepared by Tayler Hughes January 1st, 2026
         </p>
         <p className="font-bebas text-[#404040] text-[24px] md:text-[28px] text-center uppercase">
-          Willard
+          Tayler Hughes
         </p>
       </div>
 

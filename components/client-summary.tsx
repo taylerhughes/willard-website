@@ -666,7 +666,7 @@ export default function ClientSummary({ client, onUpdate }: ClientSummaryProps) 
           )}
           {client.willardWillSend && (
             <div>
-              <span className="text-sm font-medium text-gray-600">Willard Will Send:</span>
+              <span className="text-sm font-medium text-gray-600">Tayler Will Send:</span>
               <p className="text-gray-900 whitespace-pre-wrap">{client.willardWillSend}</p>
             </div>
           )}

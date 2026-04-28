@@ -401,7 +401,7 @@ export default function FunnelPage() {
           }`}>
             {withWillard ? (
               <>
-                <p className="mb-0">WILLARD</p>
+                <p className="mb-0">SIGNAL</p>
                 <p className="mb-0">PRODUCT</p>
                 <p className="mb-0">LOOP</p>
               </>
@@ -525,7 +525,7 @@ export default function FunnelPage() {
               : "bg-white text-black border-2 border-black"
           }`}
         >
-          {withWillard ? "Hide Willard's Impact" : "See What Willard Does"}
+          {withWillard ? "Hide Impact" : "See the Impact"}
         </button>
       </div>
     </div>

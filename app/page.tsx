@@ -73,12 +73,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Willard Installs Certainty Section */}
+        {/* Certainty Section */}
         <section className="px-4 md:px-8 lg:px-12 py-8 md:py-12 lg:py-14 flex flex-col items-center gap-8 md:gap-12 lg:gap-14 max-w-[1811px] mx-auto">
-          <p className="font-bebas text-[32px] md:text-[48px] lg:text-[60px] leading-[0.9] md:leading-[0.85] tracking-[-0.4px] md:tracking-[-0.6px] text-[#292929] text-center max-w-full md:max-w-[700px] lg:max-w-[793px] px-4">
-            Willard installs certainty into funded startups using our signal engine™
-          </p>
-
           {/* Company Logos */}
           <div className="hidden md:flex gap-[60px] lg:gap-[92px] items-center justify-center opacity-30 flex-wrap">
             <Image
@@ -140,6 +136,28 @@ Tayler quickly demonstrated strong product design instincts and a genuine commit
             <div className="text-center">
               <p className="font-semibold text-[16px] md:text-[18px] text-[#202020]">Robert Ross</p>
               <p className="font-medium text-[16px] md:text-[18px] text-[#8e8e8e]">Angel & LP Investor</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonial Section - Pete Gatenby */}
+        <section className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-12 lg:p-32 my-6 md:my-8 mx-4 md:mx-6 flex flex-col items-center gap-6 md:gap-8 max-w-[1811px]">
+          <p className="text-[18px] md:text-[28px] lg:text-[36px] leading-[1.5] md:leading-[1.49] tracking-[-0.24px] md:tracking-[-0.36px] text-[#292929] text-center max-w-[95%] md:max-w-[90%] lg:max-w-[1409px]">
+            Tayler is one of the best Product Designers I&apos;ve worked with in my many, many years of leading Digital Product workstreams. Tayler worked with us on client work on behalf of the business. Not only is he incredibly talented from a design standpoint, but he is also very personable and able to work collaboratively even in tough circumstances. We trust Tayler to lead independent workstreams on behalf of us with clients, which is testiment to his professionalism and skills. I would not hesitate to recommend Tayler to anyone who has a Digital Product Design need. He is top-tier.
+          </p>
+          <div className="flex flex-col items-center gap-3 md:gap-3.5">
+            <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full overflow-hidden">
+              <Image
+                src="/pete.png"
+                alt="Pete Gatenby"
+                fill
+                sizes="(min-width: 768px) 100px, 80px"
+                className="object-cover"
+              />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-[16px] md:text-[18px] text-[#202020]">Pete Gatenby</p>
+              <p className="font-medium text-[16px] md:text-[18px] text-[#8e8e8e]">Partner · Mar 2026</p>
             </div>
           </div>
         </section>
